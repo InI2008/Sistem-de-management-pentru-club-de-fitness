@@ -2,8 +2,11 @@
 
 ## Foldere principale
 
-- `apps/web` - interfata pentru utilizator si administrator.
-- `apps/api` - locul rezervat pentru backend si endpoint-uri.
+- `FitnessClubManagement.sln` - solutia principala pentru Visual Studio.
+- `src/FitnessClubManagement` - aplicatia C# Windows Forms.
+- `src/FitnessClubManagement/Assets` - logo si resurse grafice.
+- `src/FitnessClubManagement/Data` - date demonstrative si viitor acces la baza de date.
+- `src/FitnessClubManagement/Models` - modele C# pentru dashboard.
 - `database` - schema SQL completa a proiectului.
 - `docs` - documentatie pentru prezentare si explicarea arhitecturii.
 
@@ -23,3 +26,7 @@
 - organizeaza clase si programari;
 - monitorizeaza platile;
 - verifica mentenanta si rapoartele operative.
+
+## Observatie
+
+- folderul `apps` a ramas doar ca material de concept din versiunea initiala; aplicatia ceruta pentru predare este cea din `src/FitnessClubManagement`.
