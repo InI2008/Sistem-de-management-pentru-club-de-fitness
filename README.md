@@ -12,8 +12,8 @@ Design de referinta:
 |-- FitnessClubManagement.sln
 |-- src
 |   `-- FitnessClubManagement
-|       |-- Assets
-|       |   `-- fp-logo.png
+|       |-- Controls
+|       |   `-- FpLogoControl.cs
 |       |-- Data
 |       |   `-- SampleRepository.cs
 |       |-- Models
@@ -33,7 +33,7 @@ Design de referinta:
 
 - `FitnessClubManagement.sln` se deschide direct in Visual Studio.
 - `src/FitnessClubManagement` contine aplicatia C# Windows Forms.
-- logo-ul FP este inclus in `Assets/fp-logo.png`.
+- logo-ul FP este desenat direct in C# prin controlul `FpLogoControl`.
 - formularul principal afiseaza:
   - portalul pentru utilizator;
   - panoul pentru administrator;
