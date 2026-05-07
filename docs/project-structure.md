@@ -4,7 +4,7 @@
 
 - `FitnessClubManagement.sln` - solutia principala pentru Visual Studio.
 - `src/FitnessClubManagement` - aplicatia C# Windows Forms.
-- `src/FitnessClubManagement/Assets` - logo si resurse grafice.
+- `src/FitnessClubManagement/Controls` - controlul care deseneaza logo-ul FP si alte componente UI.
 - `src/FitnessClubManagement/Data` - date demonstrative si viitor acces la baza de date.
 - `src/FitnessClubManagement/Models` - modele C# pentru dashboard.
 - `database` - schema SQL completa a proiectului.
