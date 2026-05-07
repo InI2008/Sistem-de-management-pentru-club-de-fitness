@@ -8,10 +8,4 @@
     <AssemblyName>FitnessClubManagement</AssemblyName>
     <RootNamespace>FitnessClubManagement</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="Assets\fp-logo.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
 </Project>
