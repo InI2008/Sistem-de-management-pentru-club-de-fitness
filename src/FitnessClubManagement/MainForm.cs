@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
+using FitnessClubManagement.Controls;
 using FitnessClubManagement.Data;
 using FitnessClubManagement.Models;
 
@@ -96,11 +96,9 @@ public sealed class MainForm : Form
             BackColor = Color.Transparent
         };
 
-        var logo = new PictureBox
+        var logo = new FpLogoControl
         {
-            SizeMode = PictureBoxSizeMode.Zoom,
-            Dock = DockStyle.Fill,
-            Image = LoadLogo()
+            Dock = DockStyle.Fill
         };
 
         brandPanel.Controls.Add(logo);
@@ -493,11 +491,5 @@ public sealed class MainForm : Form
             AutoSize = true,
             Margin = new Padding(0, 8, 0, 0)
         };
-    }
-
-    private static Image? LoadLogo()
-    {
-        var logoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "fp-logo.png");
-        return File.Exists(logoPath) ? Image.FromFile(logoPath) : null;
     }
 }
