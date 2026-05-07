@@ -1,6 +1,6 @@
 # Sistem de management pentru club de fitness
 
-Proiect academic pentru ziua 4: structura proiectului, schema bazei de date si definirea aplicatiei pentru utilizator si administrator.
+Proiect academic realizat ca aplicatie C# pentru Visual Studio, cu interfata desktop, logo FP, schema bazei de date si separare intre zona de utilizator si zona de administrator.
 
 Design de referinta:
 [Modern Fitness Management System UI](https://www.figma.com/make/grObhsuEdcDS8UoGW8VVPb/Modern-Fitness-Management-System-UI?fullscreen=1&t=FTrwyoiHkzoJriVf-1)
@@ -9,14 +9,18 @@ Design de referinta:
 
 ```text
 .
-|-- apps
-|   |-- api
-|   |   `-- README.md
-|   `-- web
-|       |-- app.js
-|       |-- index.html
-|       |-- styles.css
-|       `-- assets
+|-- FitnessClubManagement.sln
+|-- src
+|   `-- FitnessClubManagement
+|       |-- Assets
+|       |   `-- fp-logo.png
+|       |-- Data
+|       |   `-- SampleRepository.cs
+|       |-- Models
+|       |   `-- DashboardModels.cs
+|       |-- FitnessClubManagement.csproj
+|       |-- MainForm.cs
+|       `-- Program.cs
 |-- database
 |   `-- schema.sql
 |-- docs
@@ -27,24 +31,29 @@ Design de referinta:
 
 ## Ce include proiectul
 
-- `apps/web` contine o interfata demonstrativa pentru:
-  - utilizator: programari, abonament, antrenori, progres;
-  - administrator: membri, clase, plati, KPI si administrare operationala.
+- `FitnessClubManagement.sln` se deschide direct in Visual Studio.
+- `src/FitnessClubManagement` contine aplicatia C# Windows Forms.
+- logo-ul FP este inclus in `Assets/fp-logo.png`.
+- formularul principal afiseaza:
+  - portalul pentru utilizator;
+  - panoul pentru administrator;
+  - sumarul modulelor si legatura cu baza de date.
 - `database/schema.sql` contine query-ul complet pentru baza de date.
 - `docs/database-schema.md` contine schema vizuala si explicarea relatiilor.
 - `docs/project-structure.md` explica rolul fiecarui folder.
 
-## Cum se deschide partea vizuala
+## Cum se deschide aplicatia
 
-Deschide fisierul `apps/web/index.html` in browser.
+Deschide solutia `FitnessClubManagement.sln` in Visual Studio si ruleaza proiectul `FitnessClubManagement`.
 
 ## GitHub
 
-Repo public: [InI2008/Sistem-de-management-pentru-club-de-fitness](https://github.com/InI2008/Sistem-de-management-pentru-club-de-fitness)
+Repo public:
+[InI2008/Sistem-de-management-pentru-club-de-fitness](https://github.com/InI2008/Sistem-de-management-pentru-club-de-fitness)
 
 La prezentare poti arata:
 
 1. structura directoarelor;
-2. interfata pentru user si administrator;
+2. interfata C# pentru user si administrator;
 3. schema vizuala din `docs/database-schema.md`;
 4. query-ul integral din `database/schema.sql`.
