@@ -7,6 +7,16 @@
 - `src/FitnessClubManagement/Controls` - controlul care deseneaza logo-ul FP si alte componente UI.
 - `src/FitnessClubManagement/Data` - date demonstrative si viitor acces la baza de date.
 - `src/FitnessClubManagement/Models` - modele C# pentru dashboard.
+- `src/FitnessClubManagement/login` - modul si fereastra pentru login.
+- `src/FitnessClubManagement/register` - modul si fereastra pentru inregistrare.
+- `src/FitnessClubManagement/dashboards` - modul pentru dashboard-uri.
+- `src/FitnessClubManagement/clienti` - modul pentru clienti.
+- `src/FitnessClubManagement/abonemente` - modul pentru abonamente.
+- `src/FitnessClubManagement/prezente` - modul pentru prezente.
+- `src/FitnessClubManagement/plati` - modul pentru plati.
+- `src/FitnessClubManagement/atrenori` - modul pentru antrenori.
+- `src/FitnessClubManagement/darl mode` - modul pentru tema dark.
+- `src/FitnessClubManagement/Logout` - modul pentru logout.
 - `database` - schema SQL completa a proiectului.
 - `docs` - documentatie pentru prezentare si explicarea arhitecturii.
 
