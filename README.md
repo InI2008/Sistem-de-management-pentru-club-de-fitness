@@ -34,6 +34,9 @@ Design de referinta:
 - `FitnessClubManagement.sln` se deschide direct in Visual Studio.
 - `src/FitnessClubManagement` contine aplicatia C# Windows Forms.
 - logo-ul FP este desenat direct in C# prin controlul `FpLogoControl`.
+- fiecare folder cerut are acum modul propriu in proiect:
+  - `login`, `register`, `dashboards`, `clienti`, `abonemente`, `prezente`, `plati`, `atrenori`, `darl mode`, `Logout`;
+- meniul lateral deschide ferestre dedicate pentru aceste module.
 - formularul principal afiseaza:
   - portalul pentru utilizator;
   - panoul pentru administrator;
@@ -44,7 +47,7 @@ Design de referinta:
 
 ## Cum se deschide aplicatia
 
-Deschide solutia `FitnessClubManagement.sln` in Visual Studio si ruleaza proiectul `FitnessClubManagement`.
+Deschide solutia [FitnessClubManagement.sln](/D:/Sistem-de-management-pentru-club-de-fitness/FitnessClubManagement.sln) in Visual Studio si ruleaza proiectul `FitnessClubManagement`.
 
 ## GitHub
 
