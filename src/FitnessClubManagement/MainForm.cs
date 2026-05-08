@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using FitnessClubManagement.Controls;
 using FitnessClubManagement.Data;
@@ -9,12 +10,32 @@ namespace FitnessClubManagement;
 
 public sealed class MainForm : Form
 {
-    public MainForm()
+    private static readonly string[] ProjectFolders =
+    [
+        LoginModule.DisplayName,
+        RegisterModule.DisplayName,
+        DashboardModule.DisplayName,
+        ClientiModule.DisplayName,
+        AbonementeModule.DisplayName,
+        PrezenteModule.DisplayName,
+        PlatiModule.DisplayName,
+        AtrenoriModule.DisplayName,
+        DarkModeModule.DisplayName,
+        LogoutModule.DisplayName
+    ];
+
+    private readonly AppUser _currentUser;
+    private bool _darkModeEnabled = true;
+
+    public bool RequestLogout { get; private set; }
+
+    public MainForm(AppUser currentUser)
     {
+        _currentUser = currentUser;
         Text = "FP Fitness Club Management";
         StartPosition = FormStartPosition.CenterScreen;
-        MinimumSize = new Size(1180, 760);
-        BackColor = Color.FromArgb(14, 27, 48);
+        MinimumSize = new Size(1320, 820);
+        BackColor = Color.FromArgb(8, 16, 30);
         Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
 
         BuildLayout();
@@ -25,37 +46,138 @@ public sealed class MainForm : Form
         var root = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount = 3,
-            BackColor = Color.FromArgb(14, 27, 48),
-            Padding = new Padding(18)
+            ColumnCount = 2,
+            BackColor = Color.FromArgb(8, 16, 30),
+            Padding = new Padding(14)
         };
 
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 168F));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72F));
-        root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 280F));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-        root.Controls.Add(BuildHeader(), 0, 0);
-        root.Controls.Add(BuildDatabasePanel(), 0, 1);
-        root.Controls.Add(BuildTabs(), 0, 2);
+        root.Controls.Add(BuildSidebar(), 0, 0);
+        root.Controls.Add(BuildContentArea(), 1, 0);
 
         Controls.Add(root);
     }
 
-    private Control BuildHeader()
+    private Control BuildSidebar()
     {
-        var panel = CreateCard();
-        panel.Padding = new Padding(18);
+        var sidebar = CreateCard(Color.FromArgb(11, 23, 43));
+        sidebar.Padding = new Padding(20);
+
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            RowCount = 4
+        };
+
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 160F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 90F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 90F));
+
+        var logoHost = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.Transparent
+        };
+        logoHost.Controls.Add(new FpLogoControl { Dock = DockStyle.Fill });
+
+        var accountPanel = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.FromArgb(15, 32, 59),
+            Padding = new Padding(16)
+        };
+        accountPanel.Controls.Add(new Label
+        {
+            Text = $"{_currentUser.FullName}\n{_currentUser.Email}\nRol: {GetRoleText(_currentUser.Role)}",
+            Dock = DockStyle.Fill,
+            ForeColor = Color.White,
+            Font = new Font("Segoe UI", 10F, FontStyle.Bold)
+        });
+
+        var menuList = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoScroll = true,
+            BackColor = Color.Transparent
+        };
+
+        foreach (var folder in ProjectFolders)
+        {
+            var visible = _currentUser.Role == AppRole.Admin || IsVisibleForMember(folder);
+            if (!visible)
+            {
+                continue;
+            }
+
+            menuList.Controls.Add(CreateMenuButton(folder));
+        }
+
+        var logoutPanel = new Panel
+        {
+            Dock = DockStyle.Fill,
+            BackColor = Color.FromArgb(15, 32, 59),
+            Padding = new Padding(12)
+        };
+        logoutPanel.Controls.Add(new Label
+        {
+            Text = "Modern Fitness Management System",
+            ForeColor = Color.FromArgb(111, 243, 197),
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+        });
+
+        layout.Controls.Add(logoHost, 0, 0);
+        layout.Controls.Add(accountPanel, 0, 1);
+        layout.Controls.Add(menuList, 0, 2);
+        layout.Controls.Add(logoutPanel, 0, 3);
+
+        sidebar.Controls.Add(layout);
+        return sidebar;
+    }
+
+    private Control BuildContentArea()
+    {
+        var layout = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            RowCount = 4,
+            BackColor = Color.Transparent,
+            Padding = new Padding(12, 0, 0, 0)
+        };
+
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 180F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 110F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 170F));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+        layout.Controls.Add(BuildHero(), 0, 0);
+        layout.Controls.Add(BuildInfoStrip(), 0, 1);
+        layout.Controls.Add(BuildMetricsSection(), 0, 2);
+        layout.Controls.Add(BuildLowerSection(), 0, 3);
+
+        return layout;
+    }
+
+    private Control BuildHero()
+    {
+        var hero = CreateCard(Color.FromArgb(10, 26, 50));
+        hero.Padding = new Padding(24);
 
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 2
         };
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65F));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 68F));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32F));
 
-        var textPanel = new FlowLayoutPanel
+        var copy = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.TopDown,
@@ -63,153 +185,149 @@ public sealed class MainForm : Form
             BackColor = Color.Transparent
         };
 
-        textPanel.Controls.Add(new Label
+        copy.Controls.Add(new Label
         {
-            Text = "Sistem de management pentru club de fitness",
+            Text = "MODERN FITNESS MANAGEMENT SYSTEM UI",
             ForeColor = Color.FromArgb(111, 243, 197),
-            Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
             AutoSize = true
         });
-
-        textPanel.Controls.Add(new Label
+        copy.Controls.Add(new Label
         {
-            Text = "Aplicatie C# pentru Visual Studio cu zona User, zona Administrator si schema bazei de date.",
+            Text = "Dashboard premium pentru club, inspirat din designul Figma.",
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 20F, FontStyle.Bold),
-            MaximumSize = new Size(640, 0),
+            Font = new Font("Segoe UI", 24F, FontStyle.Bold),
+            MaximumSize = new Size(720, 0),
             AutoSize = true,
-            Margin = new Padding(0, 8, 0, 0)
+            Margin = new Padding(0, 10, 0, 0)
         });
-
-        textPanel.Controls.Add(new Label
+        copy.Controls.Add(new Label
         {
-            Text = "Logo-ul FP este integrat in proiect, iar structura SQL ramane pregatita pentru prezentare si dezvoltare ulterioara.",
-            ForeColor = Color.FromArgb(198, 211, 229),
-            MaximumSize = new Size(640, 0),
+            Text = "Layout-ul urmeaza directia dark, cu carduri mari, accent albastru si organizare vizuala de tip management dashboard.",
+            ForeColor = Color.FromArgb(190, 206, 225),
+            MaximumSize = new Size(700, 0),
             AutoSize = true,
             Margin = new Padding(0, 12, 0, 0)
         });
 
-        var brandPanel = new Panel
+        var kpiPanel = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
-            BackColor = Color.Transparent
+            ColumnCount = 1
         };
+        kpiPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        kpiPanel.Controls.Add(CreateHighlightCard("Rata reinnoire", "87%", "Abonamente active si recurente"));
 
-        var logo = new FpLogoControl
-        {
-            Dock = DockStyle.Fill
-        };
-
-        brandPanel.Controls.Add(logo);
-        layout.Controls.Add(textPanel, 0, 0);
-        layout.Controls.Add(brandPanel, 1, 0);
-        panel.Controls.Add(layout);
-
-        return panel;
+        layout.Controls.Add(copy, 0, 0);
+        layout.Controls.Add(kpiPanel, 1, 0);
+        hero.Controls.Add(layout);
+        return hero;
     }
 
-    private Control BuildDatabasePanel()
+    private Control BuildInfoStrip()
     {
-        var panel = CreateCard();
-        panel.Padding = new Padding(20, 14, 20, 14);
+        var strip = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 3
+        };
 
+        strip.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+        strip.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+        strip.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35F));
+
+        strip.Controls.Add(CreateInfoCard("Aplicatie", "C# Windows Forms pentru Visual Studio"));
+        strip.Controls.Add(CreateInfoCard("Baza de date", "Schema SQL pregatita in database/schema.sql"));
+        strip.Controls.Add(CreateInfoCard("Structura ceruta", string.Join(", ", ProjectFolders)));
+
+        return strip;
+    }
+
+    private Control BuildMetricsSection()
+    {
+        var grid = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 4
+        };
+
+        for (var index = 0; index < 4; index++)
+        {
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        }
+
+        var metrics = _currentUser.Role == AppRole.Admin
+            ? SampleRepository.GetAdminMetrics()
+            : SampleRepository.GetUserMetrics();
+
+        foreach (var metric in metrics)
+        {
+            grid.Controls.Add(CreateMetricCard(metric));
+        }
+
+        return grid;
+    }
+
+    private Control BuildLowerSection()
+    {
         var layout = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 3
         };
 
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 36F));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32F));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34F));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34F));
 
-        layout.Controls.Add(CreateInfoBlock("Aplicatie", "Windows Forms, C#, Visual Studio"), 0, 0);
-        layout.Controls.Add(CreateInfoBlock("Baza de date", "PostgreSQL/MySQL schema in database/schema.sql"), 1, 0);
-        layout.Controls.Add(CreateInfoBlock("Module", "User, Administrator, Membri, Clase, Plati, Raportare"), 2, 0);
+        layout.Controls.Add(BuildFoldersCard(), 0, 0);
+        layout.Controls.Add(BuildMembershipOrAdminCard(), 1, 0);
+        layout.Controls.Add(_currentUser.Role == AppRole.Admin ? BuildAdminAlertsCard() : BuildBookingsCard(), 2, 0);
 
-        panel.Controls.Add(layout);
-        return panel;
-    }
-
-    private Control BuildTabs()
-    {
-        var tabs = new TabControl
-        {
-            Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-            Appearance = TabAppearance.Normal
-        };
-
-        var userTab = new TabPage("Portal User")
-        {
-            BackColor = Color.FromArgb(9, 19, 33)
-        };
-        userTab.Controls.Add(BuildUserView());
-
-        var adminTab = new TabPage("Panou Administrator")
-        {
-            BackColor = Color.FromArgb(9, 19, 33)
-        };
-        adminTab.Controls.Add(BuildAdminView());
-
-        tabs.TabPages.Add(userTab);
-        tabs.TabPages.Add(adminTab);
-        return tabs;
-    }
-
-    private Control BuildUserView()
-    {
-        var layout = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            Padding = new Padding(14)
-        };
-
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 52F));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 48F));
-
-        var left = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            RowCount = 2
-        };
-        left.RowStyles.Add(new RowStyle(SizeType.Absolute, 180F));
-        left.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-        left.Controls.Add(BuildMembershipCard(), 0, 0);
-        left.Controls.Add(BuildUserMetricsGrid(), 0, 1);
-
-        var right = BuildBookingsCard();
-
-        layout.Controls.Add(left, 0, 0);
-        layout.Controls.Add(right, 1, 0);
         return layout;
     }
 
-    private Control BuildAdminView()
+    private Control BuildFoldersCard()
     {
-        var layout = new TableLayoutPanel
+        var card = CreateCard(Color.FromArgb(11, 23, 43));
+        card.Padding = new Padding(18);
+
+        var panel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount = 2,
-            Padding = new Padding(14)
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoScroll = true,
+            BackColor = Color.Transparent
         };
 
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
-        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        panel.Controls.Add(CreateTitle("Foldere obligatorii"));
 
-        layout.Controls.Add(BuildAdminMetricsGrid(), 0, 0);
-        layout.Controls.Add(BuildAdminAlertsGrid(), 0, 1);
-        return layout;
+        foreach (var folder in ProjectFolders)
+        {
+            if (_currentUser.Role != AppRole.Admin && !IsVisibleForMember(folder))
+            {
+                continue;
+            }
+
+            panel.Controls.Add(CreateFolderChip(folder));
+        }
+
+        card.Controls.Add(panel);
+        return card;
+    }
+
+    private Control BuildMembershipOrAdminCard()
+    {
+        return _currentUser.Role == AppRole.Admin
+            ? BuildAdminOverviewCard()
+            : BuildMembershipCard();
     }
 
     private Control BuildMembershipCard()
     {
         var membership = SampleRepository.GetMembership();
-        var card = CreateCard();
+        var card = CreateCard(Color.FromArgb(11, 23, 43));
         card.Padding = new Padding(18);
 
         var panel = new FlowLayoutPanel
@@ -221,42 +339,43 @@ public sealed class MainForm : Form
         };
 
         panel.Controls.Add(CreateTitle("Profil si abonament"));
-        panel.Controls.Add(CreateBody($"Membru: {membership.MemberName}"));
+        panel.Controls.Add(CreateBody($"Membru: {_currentUser.FullName}"));
         panel.Controls.Add(CreateBody($"Plan activ: {membership.PlanName}"));
         panel.Controls.Add(CreateBody($"Expira la: {membership.ExpiryDate}"));
         panel.Controls.Add(CreateBody($"Status plata: {membership.PaymentStatus}"));
+        panel.Controls.Add(CreateBody("Module recomandate: abonemente, prezente, plati, atrenori"));
 
         card.Controls.Add(panel);
         return card;
     }
 
-    private Control BuildUserMetricsGrid()
+    private Control BuildAdminOverviewCard()
     {
-        var grid = new TableLayoutPanel
+        var card = CreateCard(Color.FromArgb(11, 23, 43));
+        card.Padding = new Padding(18);
+
+        var panel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount = 2,
-            Padding = new Padding(0, 14, 0, 0)
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            BackColor = Color.Transparent
         };
 
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-        grid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-        grid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+        panel.Controls.Add(CreateTitle("Panou administrator"));
+        panel.Controls.Add(CreateBody("Clienti: gestionare completa membri si profiluri."));
+        panel.Controls.Add(CreateBody("Abonemente: creare pachete, preturi si expirari."));
+        panel.Controls.Add(CreateBody("Prezente: evidenta check-in si participare la clase."));
+        panel.Controls.Add(CreateBody("Plati: urmarire facturi, incasari si restante."));
+        panel.Controls.Add(CreateBody("Atrenori: program, disponibilitate si specializari."));
 
-        var metrics = SampleRepository.GetUserMetrics();
-        for (var index = 0; index < metrics.Count; index++)
-        {
-            grid.Controls.Add(CreateMetricCard(metrics[index]), index % 2, index / 2);
-        }
-
-        return grid;
+        card.Controls.Add(panel);
+        return card;
     }
 
     private Control BuildBookingsCard()
     {
-        var card = CreateCard();
+        var card = CreateCard(Color.FromArgb(11, 23, 43));
         card.Padding = new Padding(18);
 
         var panel = new FlowLayoutPanel
@@ -279,65 +398,115 @@ public sealed class MainForm : Form
         return card;
     }
 
-    private Control BuildAdminMetricsGrid()
+    private Control BuildAdminAlertsCard()
     {
-        var grid = new TableLayoutPanel
+        var card = CreateCard(Color.FromArgb(11, 23, 43));
+        card.Padding = new Padding(18);
+
+        var panel = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
-            ColumnCount = 4,
-            Padding = new Padding(0)
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoScroll = true,
+            BackColor = Color.Transparent
         };
 
-        for (var index = 0; index < 4; index++)
+        panel.Controls.Add(CreateTitle("Alerte operationale"));
+
+        foreach (var alert in SampleRepository.GetAdminAlerts())
         {
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            panel.Controls.Add(CreateAlertBlock(alert));
         }
 
-        foreach (var metric in SampleRepository.GetAdminMetrics())
-        {
-            grid.Controls.Add(CreateMetricCard(metric));
-        }
-
-        return grid;
+        card.Controls.Add(panel);
+        return card;
     }
 
-    private Control BuildAdminAlertsGrid()
-    {
-        var grid = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount = 2,
-            Padding = new Padding(0, 14, 0, 0)
-        };
-
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-        grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-        grid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-        grid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-
-        var alerts = SampleRepository.GetAdminAlerts();
-        for (var index = 0; index < alerts.Count; index++)
-        {
-            grid.Controls.Add(CreateAdminAlertCard(alerts[index]), index % 2, index / 2);
-        }
-
-        return grid;
-    }
-
-    private Panel CreateCard()
+    private Panel CreateCard(Color backColor)
     {
         return new Panel
         {
             Dock = DockStyle.Fill,
             Margin = new Padding(8),
-            BackColor = Color.FromArgb(20, 37, 64)
+            BackColor = backColor
         };
+    }
+
+    private Control CreateInfoCard(string title, string value)
+    {
+        var card = CreateCard(Color.FromArgb(11, 23, 43));
+        card.Padding = new Padding(18);
+
+        var panel = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            BackColor = Color.Transparent
+        };
+        panel.Controls.Add(new Label
+        {
+            Text = title.ToUpperInvariant(),
+            ForeColor = Color.FromArgb(111, 243, 197),
+            Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+            AutoSize = true
+        });
+        panel.Controls.Add(new Label
+        {
+            Text = value,
+            ForeColor = Color.White,
+            MaximumSize = new Size(360, 0),
+            AutoSize = true,
+            Margin = new Padding(0, 8, 0, 0)
+        });
+
+        card.Controls.Add(panel);
+        return card;
+    }
+
+    private Control CreateHighlightCard(string title, string value, string subtitle)
+    {
+        var card = CreateCard(Color.FromArgb(18, 42, 74));
+        card.Padding = new Padding(18);
+
+        var panel = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            BackColor = Color.Transparent
+        };
+
+        panel.Controls.Add(new Label
+        {
+            Text = title,
+            ForeColor = Color.FromArgb(190, 206, 225),
+            AutoSize = true
+        });
+        panel.Controls.Add(new Label
+        {
+            Text = value,
+            ForeColor = Color.White,
+            Font = new Font("Segoe UI", 28F, FontStyle.Bold),
+            AutoSize = true,
+            Margin = new Padding(0, 10, 0, 0)
+        });
+        panel.Controls.Add(new Label
+        {
+            Text = subtitle,
+            ForeColor = Color.FromArgb(111, 243, 197),
+            AutoSize = true,
+            Margin = new Padding(0, 8, 0, 0)
+        });
+
+        card.Controls.Add(panel);
+        return card;
     }
 
     private Control CreateMetricCard(SummaryMetric metric)
     {
-        var card = CreateCard();
+        var card = CreateCard(Color.FromArgb(11, 23, 43));
         card.Padding = new Padding(18);
 
         var panel = new FlowLayoutPanel
@@ -351,123 +520,210 @@ public sealed class MainForm : Form
         panel.Controls.Add(new Label
         {
             Text = metric.Title,
-            ForeColor = Color.FromArgb(198, 211, 229),
+            ForeColor = Color.FromArgb(190, 206, 225),
             AutoSize = true
         });
         panel.Controls.Add(new Label
         {
             Text = metric.Value,
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 22F, FontStyle.Bold),
-            AutoSize = true
+            Font = new Font("Segoe UI", 24F, FontStyle.Bold),
+            AutoSize = true,
+            Margin = new Padding(0, 12, 0, 0)
         });
         panel.Controls.Add(new Label
         {
             Text = metric.Subtitle,
             ForeColor = Color.FromArgb(111, 243, 197),
-            AutoSize = true
+            AutoSize = true,
+            Margin = new Padding(0, 10, 0, 0)
         });
 
         card.Controls.Add(panel);
         return card;
     }
 
-    private Control CreateAdminAlertCard(AdminAlert alert)
+    private Control CreateFolderChip(string text)
     {
-        var card = CreateCard();
-        card.Padding = new Padding(18);
-
-        var panel = new FlowLayoutPanel
+        return new Label
         {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.TopDown,
-            WrapContents = false,
-            BackColor = Color.Transparent
-        };
-
-        panel.Controls.Add(CreateTitle(alert.Title));
-        panel.Controls.Add(new Label
-        {
-            Text = alert.Value,
+            Text = text,
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 26F, FontStyle.Bold),
+            BackColor = Color.FromArgb(16, 37, 68),
+            Padding = new Padding(12, 10, 12, 10),
+            Margin = new Padding(0, 0, 0, 10),
             AutoSize = true,
-            Margin = new Padding(0, 8, 0, 0)
-        });
-        panel.Controls.Add(CreateBody(alert.Details));
-
-        card.Controls.Add(panel);
-        return card;
+            Font = new Font("Segoe UI", 10F, FontStyle.Bold)
+        };
     }
 
     private Control CreateBookingPanel(ClassBooking booking)
     {
         var panel = new Panel
         {
-            Width = 420,
-            Height = 110,
+            Width = 320,
+            Height = 116,
             Margin = new Padding(0, 10, 0, 0),
-            BackColor = Color.FromArgb(12, 27, 46)
+            BackColor = Color.FromArgb(16, 37, 68)
         };
 
-        var title = new Label
+        panel.Controls.Add(new Label
         {
             Text = booking.ClassName,
             ForeColor = Color.White,
             Font = new Font("Segoe UI", 13F, FontStyle.Bold),
             AutoSize = true,
-            Location = new Point(16, 14)
-        };
-
-        var schedule = new Label
+            Location = new Point(16, 16)
+        });
+        panel.Controls.Add(new Label
         {
             Text = $"Program: {booking.Schedule}",
-            ForeColor = Color.FromArgb(198, 211, 229),
+            ForeColor = Color.FromArgb(190, 206, 225),
             AutoSize = true,
-            Location = new Point(16, 48)
-        };
-
-        var coach = new Label
+            Location = new Point(16, 52)
+        });
+        panel.Controls.Add(new Label
         {
             Text = $"Antrenor: {booking.CoachName}",
             ForeColor = Color.FromArgb(111, 243, 197),
             AutoSize = true,
-            Location = new Point(16, 74)
-        };
+            Location = new Point(16, 80)
+        });
 
-        panel.Controls.Add(title);
-        panel.Controls.Add(schedule);
-        panel.Controls.Add(coach);
         return panel;
     }
 
-    private Control CreateInfoBlock(string title, string value)
+    private Control CreateAlertBlock(AdminAlert alert)
     {
-        var panel = new FlowLayoutPanel
+        var panel = new Panel
         {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.TopDown,
-            WrapContents = false,
-            BackColor = Color.Transparent
+            Width = 320,
+            Height = 124,
+            Margin = new Padding(0, 10, 0, 0),
+            BackColor = Color.FromArgb(16, 37, 68)
         };
 
         panel.Controls.Add(new Label
         {
-            Text = title,
-            ForeColor = Color.FromArgb(111, 243, 197),
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-            AutoSize = true
+            Text = alert.Title,
+            ForeColor = Color.White,
+            Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+            AutoSize = true,
+            Location = new Point(16, 14)
         });
         panel.Controls.Add(new Label
         {
-            Text = value,
-            ForeColor = Color.White,
-            MaximumSize = new Size(320, 0),
+            Text = alert.Value,
+            ForeColor = Color.FromArgb(111, 243, 197),
+            Font = new Font("Segoe UI", 22F, FontStyle.Bold),
             AutoSize = true,
-            Margin = new Padding(0, 6, 0, 0)
+            Location = new Point(16, 42)
+        });
+        panel.Controls.Add(new Label
+        {
+            Text = alert.Details,
+            ForeColor = Color.FromArgb(190, 206, 225),
+            MaximumSize = new Size(280, 0),
+            AutoSize = true,
+            Location = new Point(16, 80)
         });
 
         return panel;
+    }
+
+    private Control CreateMenuButton(string text)
+    {
+        var button = new Button
+        {
+            Text = text,
+            Width = 216,
+            Height = 44,
+            Margin = new Padding(0, 0, 0, 10),
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(16, 37, 68),
+            ForeColor = Color.White,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Font = new Font("Segoe UI", 10F, FontStyle.Bold)
+        };
+        button.FlatAppearance.BorderSize = 0;
+        button.Click += (_, _) => HandleMenuAction(text);
+        return button;
+    }
+
+    private void HandleMenuAction(string moduleName)
+    {
+        switch (moduleName)
+        {
+            case "login":
+                using (var form = new LoginPageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "register":
+                using (var form = new RegisterPageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "dashboards":
+                using (var form = new DashboardsPageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "clienti":
+                using (var form = new ClientiPageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "abonemente":
+                using (var form = new AbonementePageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "prezente":
+                using (var form = new PrezentePageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "plati":
+                using (var form = new PlatiPageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "atrenori":
+                using (var form = new AtrenoriPageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "darl mode":
+                ToggleDarkMode();
+                using (var form = new DarkModePageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                break;
+            case "Logout":
+                using (var form = new LogoutPageForm())
+                {
+                    form.ShowDialog(this);
+                }
+                RequestLogout = true;
+                Close();
+                break;
+        }
+    }
+
+    private void ToggleDarkMode()
+    {
+        _darkModeEnabled = !_darkModeEnabled;
+        BackColor = _darkModeEnabled ? Color.FromArgb(8, 16, 30) : Color.FromArgb(224, 232, 243);
     }
 
     private Label CreateTitle(string text)
@@ -486,10 +742,20 @@ public sealed class MainForm : Form
         return new Label
         {
             Text = text,
-            ForeColor = Color.FromArgb(198, 211, 229),
-            MaximumSize = new Size(560, 0),
+            ForeColor = Color.FromArgb(190, 206, 225),
+            MaximumSize = new Size(360, 0),
             AutoSize = true,
-            Margin = new Padding(0, 8, 0, 0)
+            Margin = new Padding(0, 10, 0, 0)
         };
+    }
+
+    private static string GetRoleText(AppRole role)
+    {
+        return role == AppRole.Admin ? "Administrator" : "Membru";
+    }
+
+    private static bool IsVisibleForMember(string folder)
+    {
+        return folder is "login" or "register" or "dashboards" or "abonemente" or "atrenori" or "darl mode";
     }
 }
